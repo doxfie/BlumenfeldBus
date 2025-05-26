@@ -5,3 +5,5 @@ services:
     container_name: busbot
     env_file: .env
     restart: unless-stopped
+    volumes:
+      - .:/app

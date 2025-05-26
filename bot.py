@@ -1,6 +1,8 @@
 import os
 import asyncio
 import logging
+import json
+from pathlib import Path
 from datetime import datetime, timedelta
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
@@ -14,6 +16,8 @@ if not TOKEN:
     raise RuntimeError("BOT_TOKEN не найден!")
 
 OMSK_TZ = pytz.timezone('Asia/Omsk')
+
+USERS_FILE = Path(__file__).resolve().parent / "users.json"
 
 # Водители
 DRIVERS = {
@@ -101,8 +105,31 @@ def get_back_keyboard(direction):
         [InlineKeyboardButton(text="🔄 Обновить", callback_data=f"refresh_{direction}")]
     ])
 
+def load_users():
+    if USERS_FILE.exists():
+        with USERS_FILE.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def save_users(users):
+    with USERS_FILE.open("w", encoding="utf-8") as f:
+        json.dump(users, f, indent=2, ensure_ascii=False)
+
+def register_user(user: types.User):
+    users = load_users()
+    if not any(u["id"] == user.id for u in users):
+        users.append({
+            "id": user.id,
+            "name": user.full_name,
+            "username": user.username,
+            "joined": datetime.now().isoformat()
+        })
+        save_users(users)
+        print(f"Saving users: {users}")
+
 @dp.message(Command("start"))
 async def start(message: types.Message):
+    register_user(message.from_user)
     text = (
         "Если вы заметили ошибку в расписании или оно устарело, "
         '<a href="https://t.me/doxfie">напишите мне</a>.\n\n'
