@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  busbot:
+    build: .
+    container_name: busbot
+    env_file: .env
+    restart: unless-stopped
