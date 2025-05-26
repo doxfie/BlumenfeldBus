@@ -103,11 +103,31 @@ def get_back_keyboard(direction):
 
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer("Выберите направление:", reply_markup=get_main_keyboard())
+    text = (
+        "Если вы заметили ошибку в расписании или оно устарело, "
+        '<a href="https://t.me/doxfie">напишите мне</a>.\n\n'
+        "Выберите направление:"
+    )
+    await message.answer(
+        text,
+        reply_markup=get_main_keyboard(),
+        parse_mode="HTML",
+        disable_web_page_preview=True
+    )
 
 @dp.callback_query(F.data == "back_to_menu")
 async def back_menu(callback: types.CallbackQuery):
-    await callback.message.edit_text("Выберите направление:", reply_markup=get_main_keyboard())
+    text = (
+        "Если вы заметили ошибку в расписании или оно устарело, "
+        '<a href="https://t.me/doxfie">напишите мне</a>.\n\n'
+        "Выберите направление:"
+    )
+    await callback.message.edit_text(
+        text,
+        reply_markup=get_main_keyboard(),
+        parse_mode="HTML",
+        disable_web_page_preview=True
+    )
 
 @dp.callback_query(F.data.in_(["from_omsk", "from_tsvetnopolye", "refresh_from_omsk", "refresh_from_tsvetnopolye"]))
 async def show_schedule(callback: types.CallbackQuery):
@@ -124,13 +144,19 @@ async def show_schedule(callback: types.CallbackQuery):
     if past:
         msg += "❌ <b>Уже прошли:</b>\n"
         for t, l, driver in past:
-            msg += f"<s><b>{html.escape(t)} — {html.escape(l)}</b></s> (водитель: {html.escape(DRIVERS[driver])})\n"
+            msg += (
+                f"<s>{html.escape(t)} — {html.escape(l)}</s>\n"
+                f"(водитель: {html.escape(DRIVERS[driver])})\n"
+            )
 
     if upcoming:
         msg += "\n✅ <b>Ещё будут:</b>\n"
         for i, (t, l, driver) in enumerate(upcoming):
-            t_fmt = f"<b>{html.escape(t)} — {html.escape(l)}</b>" if i == 0 else f"{html.escape(t)} — {html.escape(l)}"
-            msg += f"{t_fmt} (водитель: {html.escape(DRIVERS[driver])})\n"
+            t_formatted = f"<b>{html.escape(t)} — {html.escape(l)}</b>" if i == 0 else f"{html.escape(t)} — {html.escape(l)}"
+            msg += (
+                f"{t_formatted}\n"
+                f"(водитель: {html.escape(DRIVERS[driver])})\n"
+            )
         delta = get_time_to_next(upcoming, now)
         if delta:
             h, m = divmod(delta.seconds // 60, 60)
@@ -139,7 +165,7 @@ async def show_schedule(callback: types.CallbackQuery):
         msg += "\nСегодня рейсов больше нет."
 
     if weekday == 2:
-        msg += "\n\n⚠️ <b>По средам только 2 рейса Омск → Цветнополье и 2 рейса Цветнополье → Омск!</b>"
+        msg += "\n\n⚠️ <b>По средам только 2 рейса \nОмск → Цветнополье и 2 рейса \nЦветнополье → Омск!</b>"
 
     await callback.message.edit_text(msg, reply_markup=get_back_keyboard(direction), parse_mode="HTML")
 
